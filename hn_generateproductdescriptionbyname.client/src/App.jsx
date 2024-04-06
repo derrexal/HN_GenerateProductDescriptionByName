@@ -1,49 +1,32 @@
-import { useEffect, useState } from 'react';
-import './App.css';
+import React from 'react';
+import { Routes, Route, Link } from 'react-router-dom'; // Убираем BrowserRouter
+import { Container, AppBar, Toolbar, Typography, Button } from '@mui/material';
+import HomePage from './pages/HomePage.jsx';
+import AnalysisPage from './pages/AnalysisPage.jsx';
+import SettingsPage from './pages/SettingsPage.jsx';
+import NotFoundPage from './pages/NotFoundPage.jsx';
 
 function App() {
-    const [forecasts, setForecasts] = useState();
-
-    useEffect(() => {
-        populateWeatherData();
-    }, []);
-
-    const contents = forecasts === undefined
-        ? <p><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for more details.</em></p>
-        : <table className="table table-striped" aria-labelledby="tabelLabel">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Temp. (C)</th>
-                    <th>Temp. (F)</th>
-                    <th>Summary</th>
-                </tr>
-            </thead>
-            <tbody>
-                {forecasts.map(forecast =>
-                    <tr key={forecast.date}>
-                        <td>{forecast.date}</td>
-                        <td>{forecast.temperatureC}</td>
-                        <td>{forecast.temperatureF}</td>
-                        <td>{forecast.summary}</td>
-                    </tr>
-                )}
-            </tbody>
-        </table>;
-
     return (
-        <div>
-            <h1 id="tabelLabel">Weather forecast</h1>
-            <p>This component demonstrates fetching data from the server.</p>
-            {contents}
-        </div>
+        <Container maxWidth="lg">
+            <AppBar position="static">
+                <Toolbar>
+                    <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                        Tender Hack App
+                    </Typography>
+                    <Button color="inherit" component={Link} to="/">Home</Button>
+                    <Button color="inherit" component={Link} to="/analysis">Analysis</Button>
+                    <Button color="inherit" component={Link} to="/settings">Settings</Button>
+                </Toolbar>
+            </AppBar>
+            <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/analysis" element={<AnalysisPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+        </Container>
     );
-    
-    async function populateWeatherData() {
-        const response = await fetch('weatherforecast');
-        const data = await response.json();
-        setForecasts(data);
-    }
 }
 
 export default App;
