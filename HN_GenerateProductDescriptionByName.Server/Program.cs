@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+
 
 namespace HN_GenerateProductDescriptionByName.Server
 {
@@ -14,7 +16,19 @@ namespace HN_GenerateProductDescriptionByName.Server
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            builder.Services.AddDbContextFactory<CustomDbContext>(options =>
+                options.UseNpgsql(builder.Configuration.GetConnectionString("CustomDbContext")
+                                  ?? throw new InvalidOperationException("Connection string 'CustomDbContext' not found.")));
+
+
             var app = builder.Build();
+
+            var factory = app.Services.GetRequiredService<IDbContextFactory<CustomDbContext>>();
+            using (var context = factory.CreateDbContext())
+            {
+                //Applying migrations to run programm
+                context.Database.Migrate();
+            }
 
             app.UseDefaultFiles();
             app.UseStaticFiles();
