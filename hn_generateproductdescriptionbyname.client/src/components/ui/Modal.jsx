@@ -3,7 +3,7 @@ import { Box, Modal, Button, Checkbox, FormControlLabel, FormGroup, Select, Menu
 import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 
-function ModalComponent({ open, handleClose, onApply, data }) {
+function ModalComponent({ open, handleClose, onApply, data, selectedCategory }) {
     const [page, setPage] = useState(0);
     const [checkboxState, setCheckboxState] = useState({});
     const [selectedOption, setSelectedOption] = useState('');
@@ -11,36 +11,22 @@ function ModalComponent({ open, handleClose, onApply, data }) {
 
     useEffect(() => {
         if (data) {
-            const initialState = {};
-            data.categories.forEach(category => {
-                initialState[category.value] = false;
-            });
-            setCheckboxState(initialState);
+            resetStates(); // Call reset function on modal open
         }
-    }, [data]);
-
-    const handleCheckboxChange = (value) => {
-        setCheckboxState(prev => ({ ...prev, [value]: !prev[value] }));
-    };
+    }, [data, page]); // Include page in dependency array to reset states on page change
 
     const resetStates = () => {
-        const resetCheckboxState = {};
-        Object.keys(checkboxState).forEach(key => {
-            resetCheckboxState[key] = false;
+        const initialState = {};
+        data.categories.forEach(category => {
+            initialState[category.value] = false;
         });
-        setCheckboxState(resetCheckboxState);
+        setCheckboxState(initialState);
         setSelectedOption('');
         setRadioValue('');
     };
 
-    const handleNext = () => {
-        resetStates();
-        setPage(current => Math.min(current + 1, maxPages - 1));
-    };
-
-    const handlePrev = () => {
-        resetStates();
-        setPage(current => Math.max(current - 1, 0));
+    const handleCheckboxChange = (value) => {
+        setCheckboxState(prev => ({ ...prev, [value]: !prev[value] }));
     };
 
     const handleApply = () => {
@@ -48,7 +34,7 @@ function ModalComponent({ open, handleClose, onApply, data }) {
         switch (page) {
             case 0: // Checkbox page
                 const selectedCategories = Object.keys(checkboxState).filter(key => checkboxState[key]);
-                applyData = { mainCategory: selectedCategories };
+                applyData = { mainCategory: selectedCategories.length > 0 ? selectedCategories[0] : selectedCategory };
                 break;
             case 1: // Radio buttons page
                 applyData = { secondaryCategory: radioValue };
@@ -88,9 +74,10 @@ function ModalComponent({ open, handleClose, onApply, data }) {
             </RadioGroup>
         ),
         data && (
+            // Update this part to display all categories
             <Select fullWidth value={selectedOption} onChange={(e) => setSelectedOption(e.target.value)} displayEmpty>
                 <MenuItem value=""><em>Выберите опцию</em></MenuItem>
-                {data.categories.filter(category => category.key === data.tertiaryKey).map(category => (
+                {data.categories.map(category => (
                     <MenuItem key={category.value} value={category.value}>{category.value}</MenuItem>
                 ))}
             </Select>
@@ -116,12 +103,12 @@ function ModalComponent({ open, handleClose, onApply, data }) {
                     position="static"
                     activeStep={page}
                     nextButton={
-                        <IconButton size="small" onClick={handleNext} disabled={page === maxPages - 1}>
+                        <IconButton size="small" onClick={() => setPage(prevPage => Math.min(prevPage + 1, maxPages - 1))} disabled={page === maxPages - 1}>
                             <KeyboardArrowRight />
                         </IconButton>
                     }
                     backButton={
-                        <IconButton size="small" onClick={handlePrev} disabled={page === 0}>
+                        <IconButton size="small" onClick={() => setPage(prevPage => Math.max(prevPage - 1, 0))} disabled={page === 0}>
                             <KeyboardArrowLeft />
                         </IconButton>
                     }
