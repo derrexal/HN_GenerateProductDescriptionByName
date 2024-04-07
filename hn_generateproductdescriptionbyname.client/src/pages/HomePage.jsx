@@ -252,7 +252,7 @@ function HomePage() {
                     fontFamily: 'Arial, sans-serif', // Шрифт (можно выбрать любой подходящий)
                 }}
             >
-                Tender Hack
+                Сервис генерации наименования и характеристик СТЕ в универсальном виде
             </Typography>
             <Box
                 sx={{
