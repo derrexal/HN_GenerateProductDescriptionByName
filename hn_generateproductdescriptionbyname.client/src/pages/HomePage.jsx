@@ -27,13 +27,15 @@ function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [radioButtonsData, setRadioButtonsData] = useState([]);
   const [selectOptionsData, setSelectOptionsData] = useState([]);
+  const [productInfo, setProductInfo] = useState(null);
 
   // Используем useSelector, чтобы получить статус загрузки и данные из Redux store
   const {
     status,
-    items,
+    categories,
     error: fetchError,
   } = useSelector((state) => state.data ?? {});
+  console.log('categories>>', categories)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [closestCategories, setclosestCategories] = useState([]);
 
@@ -54,6 +56,56 @@ function HomePage() {
           "Главный товар 4",
           "Главный товар 5",
         ],
+        productCharacteristics: [
+          {
+            name: "Главный товар 1",
+            characteristics: [
+              { name: "Цвет", value: "Красный" },
+              { name: "Вес", value: "1 кг" }
+            ]
+          },
+          {
+            name: "Главный товар 2",
+            characteristics: [
+              { name: "Цвет", value: "Красный" },
+              { name: "Ширина", value: "200" },
+              { name: "Высота", value: "500" },
+              { name: "Вес", value: "1 кг" }
+            ]
+          },
+          {
+            name: "Главный товар 3",
+            characteristics: [
+              { name: "Цвет", value: "Красный" },
+              { name: "Ширина", value: "300" },
+              { name: "Высота", value: "400" },
+              { name: "Материал", value: "Дерево" },
+              { name: "Объем", value: "100" },
+              { name: "Вес", value: "1 кг" }
+            ]
+          },
+          {
+            name: "Главный товар 4",
+            characteristics: [
+              { name: "Цвет", value: "Красный" },
+              { name: "Ширина", value: "100" },
+              { name: "Высота", value: "300" },
+              { name: "Материал", value: "Металл" },
+              { name: "Объем", value: "500" },
+              { name: "Форма", value: "Шар" },
+              { name: "Вес", value: "1 кг" }
+            ]
+          },
+          {
+            name: "Главный товар 5",
+            characteristics: [
+              { name: "Цвет", value: "Красный" },
+              { name: "Ширина", value: "400" },
+              { name: "Высота", value: "200" },
+              { name: "Вес", value: "1 кг" }
+            ]
+          },
+          ],
       },
       {
         id: 2,
@@ -259,7 +311,38 @@ function HomePage() {
   const handleProductClick = (product) => {
     setInputValue(product);
     setSuggestions([]); // Очищаем подсказки после выбора товара
+
+    // Ищем категорию, которая содержит выбранный продукт
+    let selectedProductInfo = null;
+    for (const category of modalData.categories) {
+      for (const productCharacteristic of category.productCharacteristics || []) {
+        if (productCharacteristic.name === product) {
+          selectedProductInfo = productCharacteristic;
+          break;
+        }
+      }
+      if (selectedProductInfo) break;
+    }
+
+    setProductInfo(selectedProductInfo); // Устанавливаем информацию о товаре
   };
+
+  // Добавляем отображение информации о выбранном товаре под инпутом и кнопкой
+  const renderProductInfo = () => {
+    if (!productInfo) {
+      return null;
+    }
+
+    return (
+        <Box sx={{ mt: 2, p: 2, border: '1px solid gray', borderRadius: '5px' }}>
+          <Typography variant="h6">{productInfo.name}</Typography>
+          {productInfo.characteristics.map((char, index) => (
+              <Typography key={index}>{`${char.name}: ${char.value}`}</Typography>
+          ))}
+        </Box>
+    );
+  };
+
 
   const renderSuggestions = () => {
     if (!inputValue.trim()) {
@@ -393,14 +476,7 @@ function HomePage() {
             Получить данные
           </Button>
           {renderSuggestions()}
-          <ModalComponent
-            open={isModalOpen}
-            handleClose={handleCloseModal}
-            onApply={handleApply}
-            data={modalData}
-            closestCategories={closestCategories}
-            selectedCategory={selectedCategory}
-          />
+         
           {error && (
             <Box
               sx={{
@@ -416,13 +492,17 @@ function HomePage() {
             </Box>
           )}
         </Box>
+        {renderProductInfo()}
+        <ModalComponent
+            open={isModalOpen}
+            handleClose={handleCloseModal}
+            onApply={handleApply}
+            data={modalData}
+            closestCategories={closestCategories}
+            selectedCategory={selectedCategory}
+        />
         {status === "loading" && (
           <Typography sx={{ mt: 2 }}>Загрузка...</Typography>
-        )}
-        {status === "failed" && (
-          <Typography color="error" sx={{ mt: 2 }}>
-            {fetchError}
-          </Typography>
         )}
       </Box>
     </div>

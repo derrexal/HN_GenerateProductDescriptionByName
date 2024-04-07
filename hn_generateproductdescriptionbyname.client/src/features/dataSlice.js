@@ -5,9 +5,8 @@ export const fetchDataAsync = createAsyncThunk(
     'data/fetchData',
     async (data, { rejectWithValue }) => {
         try {
-            // Здесь должен быть ваш API запрос для загрузки данных
-            // Вместо примера ниже используйте реальный API запрос
-            const response = await fetch('https://your-api.com/data', {
+
+            const response = await fetch('http://localhost:5229/SearchResult/GetSearchResult', {
                 method: 'POST', // или 'GET', в зависимости от вашего API
                 headers: {
                     'Content-Type': 'application/json',

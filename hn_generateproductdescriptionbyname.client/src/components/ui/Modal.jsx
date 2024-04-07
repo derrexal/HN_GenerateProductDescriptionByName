@@ -49,6 +49,18 @@ function ModalComponent({ open, handleClose, onApply, data, selectedCategory, cl
         handleClose();
     };
 
+    // Check if any value is selected on any page
+    const isAnyValueSelected = () => {
+        if (page === 0) { // For checkbox page
+            return Object.values(checkboxState).some(v => v === true);
+        } else if (page === 1) { // For radio buttons page
+            return radioValue !== '';
+        } else if (page === 2) { // For select dropdown page
+            return selectedOption !== '';
+        }
+        return false;
+    };
+
     const pages = [
         data && (
             <FormGroup>
@@ -94,8 +106,9 @@ function ModalComponent({ open, handleClose, onApply, data, selectedCategory, cl
                 height: 600,
                 display: 'flex', flexDirection: 'column',
             }}>
-                <Typography variant="h6" sx={{ mb: 2 }}>Страница {page + 1}</Typography>
+                <Typography variant="h6" sx={{ mb: 2 }}>Вы можете выбрать категорию и нажать Применить</Typography>
                 {pages[page]}
+                <Typography variant="h6" sx={{ mb: 2 }}>Если среди предложенных вариантов нет вашей категории, продолжите выбор на другой странице</Typography>
                 <MobileStepper
                     variant="dots"
                     steps={maxPages}
@@ -113,7 +126,7 @@ function ModalComponent({ open, handleClose, onApply, data, selectedCategory, cl
                     }
                     sx={{ flexGrow: 1 }}
                 />
-                <Button onClick={handleApply} sx={{ mt: 2 }}>
+                <Button onClick={handleApply} disabled={!isAnyValueSelected()} sx={{ mt: 2 }}>
                     Применить
                 </Button>
             </Box>
