@@ -4,7 +4,8 @@ import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import App from './App';
-import store from './app/store';
+import {store} from './app/store';
+import './index.css';
 
 const theme = createTheme({
     palette: {

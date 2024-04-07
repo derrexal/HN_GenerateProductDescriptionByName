@@ -1,8 +1,8 @@
 import { configureStore } from '@reduxjs/toolkit';
-import rootReducer from './RootReducer';
+import dataReducer from '../features/dataSlice';
 
-const store = configureStore({
-    reducer: rootReducer,
+export const store = configureStore({
+    reducer: {
+        data: dataReducer, // Теперь правильно подключаем редьюсер
+    },
 });
-
-export default store;
