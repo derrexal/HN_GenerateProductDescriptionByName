@@ -57,7 +57,131 @@ namespace HN_GenerateProductDescriptionByName.Server.Controllers
         }
 
         [HttpGet("GetSearchResult")]
-        public async Task<string?> GetSearchResult(string query) 
+        public async Task<string?> GetSearchResult(string query)
+        {
+            //Пока условимся что юзер не выбирает категорию, и мы доверяем MLL
+            var categoryList = await GetCategoryListFromNameProduct(query);
+            var currentCategory = categoryList.FirstOrDefault();
+            //Получаем все характеристкии "выбранной" категории
+            //TODO: это может не принять фронт! Нужно будет ДТО
+            //var productDetailsCurrentCategory = await _context.ProductDetails.Where(p => p.PortalCategoryName == currentCategory).Select(p => new {p.detailId,p.detailName}).ToListAsync();
+            var productDetailsCurrentCategory = await _context.ProductDetails.Where(p => p.PortalCategoryName == currentCategory).ToListAsync();
+            //Убираем лишние символы из запроса (наименования товара)
+            query = ReplaceChartersQuery(query);
+            // Формируем url к сервису который "гуглит" товар и отдает самые релевантные ссылки по нему
+            string searchProductUrl = ConstructUri(query);
+
+            try
+            {
+                ////Получаем ссылки с которых нужно спарсить данные
+                string searchResponse = await GetHttp(searchProductUrl);
+                var searchResults = JsonConvert.DeserializeObject<List<SearchResult>>(searchResponse);
+                if (searchResults is null)
+                    throw new Exception("Не найдено ссылок на товар");
+
+                //Сколько совпадений по наименованию характеристик в каждом из источников
+                //TODO: зачем, если все равно мы смотрим смотрим по характеристикам с даннными
+                Dictionary<SearchResult, int> countsContains = new Dictionary<SearchResult, int>();
+                List<Dictionary<string, string>> detailsAndValueListGlobal = new List<Dictionary<string, string>>();
+
+                //В цикле проходим по найденным ссылкам и парсим с них данные
+                foreach (var searchResult in searchResults)
+                {
+                    int countContainsNameDetails = 0;
+                    List<ProductDetails> currentProductDetails = new List<ProductDetails>();
+
+                    string parseUrl = $"http://127.0.0.1:5000/api/getInfoFromUrl?url={searchResult.Url}";
+                    var parseResponse = await GetHttp(parseUrl);
+                    //если ответ не пустой
+                    if (parseResponse.Length < 10) //условное ограничение (если ответ пустой)
+                        continue;
+
+                    // ТУТ ищем наибольшее количество сонтейнсов в данных, где больше тот и берем. Найденные сохраняем и потом по ним вытаскиваем значения
+                    foreach (var category in productDetailsCurrentCategory)
+                    {
+                        if (parseResponse.Contains(category.PortalCategoryName))
+                        {
+                            countContainsNameDetails++;
+                            currentProductDetails.Add(category);
+                        }
+                    }
+                    countsContains.Add(searchResult, countContainsNameDetails);
+
+                    //Цикл по всем найденным характеристикам в тексте
+                    //TODO: тут должен был быть еще какой-то счетчик. Вспоминай
+                    Dictionary<string, string> detailsAndValue = new Dictionary<string, string>();
+                    foreach (var category in currentProductDetails)
+                    {
+                        // Получаем значения характеристик
+                        var data = new OtherClassFindProductDetails
+                        {
+                            ProductDetail = parseResponse,
+                            Context = category.detailName
+                        };
+                        string answerUrl = "http://127.0.0.1:5000/api/getAnswerFromQuestion";
+                        string answerResponse = await PostHttp(answerUrl, data);
+                        if (answerResponse == "" || answerResponse == "\"\"")
+                            continue;
+                        detailsAndValue.Add(category.detailName, answerResponse);
+                    }
+                    detailsAndValueListGlobal.Add(detailsAndValue);
+                }
+                //Ищем список с самым большим количество элементов
+                //detailsAndValueListGlobal.Max(p => p.Count();
+                return "";
+
+                //using var response = await httpClient.GetAsync(searchUrl);
+                //jsonResponse = await response.Content.ReadAsStringAsync();
+                //var searchResults = JsonConvert.DeserializeObject<List<SearchResult>>(jsonResponse);
+                //if (searchResults != null)
+                //    foreach(var searchResult in searchResults)
+                //    {
+                //        //Парсим данные
+                //        string uri = $"http://127.0.0.1:5000/api/getInfoFromUrl?url={searchResult.Url}";
+                //        using var response2 = await httpClient.GetAsync(uri);
+                //        jsonResponse = await response2.Content.ReadAsStringAsync();
+                //        //если ответ не пустой
+                //        if (jsonResponse != "")
+                //        {
+                //            Console.WriteLine(jsonResponse);
+                //        }
+
+                //    }
+
+                //Получаем значения категорий
+                //test
+                //string uri4 = $"http://127.0.0.1:5000/api/getAnswerFromQuestion";
+                //using var response4 = await httpClient.GetAsync(uri4);
+                //jsonResponse = await response4.Content.ReadAsStringAsync();
+                //if (jsonResponse != "")
+                //{
+                //    Console.WriteLine(jsonResponse);
+                //}
+                //return jsonResponse;
+
+                //Получаем категории
+                //string uri3 = $"http://127.0.0.1:5000/api/getCategotyListFromNameProduct?name={query}";
+                //using var response3 = await httpClient.GetAsync(uri3);
+                //jsonResponse = await response3.Content.ReadAsStringAsync(); 
+                //if (jsonResponse != "")
+                //{
+                //    Console.WriteLine(jsonResponse);
+                //}
+
+                //return searchResults;
+                //throw new HttpRequestException("Поисковый движок не вернул ответ");
+            }
+
+            catch (JsonReaderException)
+            {
+                _logger.LogError($"Не удалось распарсить ответ в JSON");
+                throw;
+            }
+        }
+
+
+        [HttpGet("GetSearchResultOld")]
+        public async Task<string?> GetSearchResultOld(string query) 
         {
             //Пока условимся что юзер не выбирает категорию, и мы доверяем MLL
             var categoryList = await GetCategoryListFromNameProduct(query);
@@ -127,7 +251,7 @@ namespace HN_GenerateProductDescriptionByName.Server.Controllers
                     detailsAndValueListGlobal.Add(detailsAndValue);
                 }
                 //Ищем список с самым большим количество элементов
-                detailsAndValueListGlobal.Max(p => p.Count();
+                //detailsAndValueListGlobal.Max(p => p.Count();
                 return "";
 
                 //using var response = await httpClient.GetAsync(searchUrl);
