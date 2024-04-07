@@ -3,7 +3,7 @@ import { Box, Modal, Button, Checkbox, FormControlLabel, FormGroup, Select, Menu
 import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 
-function ModalComponent({ open, handleClose, onApply, data, selectedCategory }) {
+function ModalComponent({ open, handleClose, onApply, data, selectedCategory, closestCategories }) {
     const [page, setPage] = useState(0);
     const [checkboxState, setCheckboxState] = useState({});
     const [selectedOption, setSelectedOption] = useState('');
@@ -52,18 +52,17 @@ function ModalComponent({ open, handleClose, onApply, data, selectedCategory }) 
     const pages = [
         data && (
             <FormGroup>
-                {data.categories.filter(category => category.key === data.mainKey).map(category => (
                     <FormControlLabel
-                        key={category.value}
-                        control={<Checkbox checked={checkboxState[category.value] || false} onChange={() => handleCheckboxChange(category.value)} name={category.value} />}
-                        label={category.value}
+                        key={selectedCategory.key}
+                        control={<Checkbox checked={checkboxState[selectedCategory.value] || false} onChange={() => handleCheckboxChange(selectedCategory.value)} name={selectedCategory.value} />}
+                        // label={category.value}
+                        label={selectedCategory.value}
                     />
-                ))}
             </FormGroup>
         ),
         data && (
             <RadioGroup value={radioValue} onChange={(event) => setRadioValue(event.target.value)}>
-                {data.categories.filter(category => category.key !== data.mainKey && category.key !== data.tertiaryKey).map(category => (
+                {closestCategories.map(category => (
                     <FormControlLabel
                         key={category.value}
                         value={category.value}

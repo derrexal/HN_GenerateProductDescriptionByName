@@ -35,16 +35,16 @@ function HomePage() {
     error: fetchError,
   } = useSelector((state) => state.data ?? {});
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [closestCategories, setclosestCategories] = useState([]);
 
   useEffect(() => {
     dispatch(fetchDataAsync()); // Загрузка данных при монтировании компонента
   }, [dispatch]);
 
   const modalData = {
-    mainKey: "mainCategory",
-    tertiaryKey: "tertiaryCategory",
     categories: [
       {
+        id: 1,
         key: "mainCategory",
         value: "Главная категория",
         products: [
@@ -56,6 +56,7 @@ function HomePage() {
         ],
       },
       {
+        id: 2,
         key: "secondaryCategory",
         value: "Второстепенная 1",
         products: [
@@ -67,6 +68,7 @@ function HomePage() {
         ],
       },
       {
+        id: 3,
         key: "secondaryCategory",
         value: "Второстепенная 2",
         products: [
@@ -78,6 +80,7 @@ function HomePage() {
         ],
       },
       {
+        id: 4,
         key: "secondaryCategory",
         value: "Второстепенная 3",
         products: [
@@ -89,6 +92,7 @@ function HomePage() {
         ],
       },
       {
+        id: 5,
         key: "tertiaryCategory",
         value: "Третьестепенная 1",
         products: [
@@ -100,6 +104,7 @@ function HomePage() {
         ],
       },
       {
+        id: 6,
         key: "tertiaryCategory",
         value: "Третьестепенная 2",
         products: [
@@ -111,6 +116,7 @@ function HomePage() {
         ],
       },
       {
+        id: 7,
         key: "tertiaryCategory",
         value: "Третьестепенная 3",
         products: [
@@ -122,6 +128,7 @@ function HomePage() {
         ],
       },
       {
+        id: 8,
         key: "tertiaryCategory",
         value: "Третьестепенная 4",
         products: [
@@ -133,6 +140,7 @@ function HomePage() {
         ],
       },
       {
+        id: 9,
         key: "tertiaryCategory",
         value: "Третьестепенная 5",
         products: [
@@ -191,16 +199,18 @@ function HomePage() {
 
     // Определение категории введенного товара
     let selectedCategory = "";
+    let sendSelectedCategory = {};
     modalData.categories.forEach((category) => {
       const foundProduct = category.products.find(
         (product) => product.toLowerCase() === inputValue.toLowerCase()
       );
       if (foundProduct) {
         selectedCategory = category.value;
+        sendSelectedCategory = category;
       }
     });
 
-    setSelectedCategory(selectedCategory); // Установка выбранной категории
+    setSelectedCategory(sendSelectedCategory); // Установка выбранной категории
 
     // Подготовка данных для первой страницы модального окна
     const firstPageData = { mainCategory: [selectedCategory] };
@@ -221,11 +231,13 @@ function HomePage() {
     setRadioButtonsData(radioButtonsData); // Устанавливаем данные для радиокнопок на второй странице модального окна
     setSelectOptionsData(selectOptionsData); // Устанавливаем данные для селектбокса на третьей странице модального окна
 
+    let closestCategories = modalData.categories.filter(category => category.key !== selectedCategory.key).slice(0, 3);
+    setclosestCategories(closestCategories);
     // Открытие модального окна
     handleOpenModal();
   };
 
-  const handleOpenModal = () => {
+  const handleOpenModal = (selectedCategory, closestCategories) => {
     const validationResult = validateNotEmptyAndLength(inputValue, 3); // Аналогично используем валидацию для значения инпута
     if (!validationResult.isValid) {
       setError(true);
@@ -386,6 +398,7 @@ function HomePage() {
             handleClose={handleCloseModal}
             onApply={handleApply}
             data={modalData}
+            closestCategories={closestCategories}
             selectedCategory={selectedCategory}
           />
           {error && (
